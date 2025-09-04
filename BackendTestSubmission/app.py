@@ -7,26 +7,23 @@ from LoggingMiddleware.logger import log_request
 app = Flask(__name__)
 log_request(app)
 
-# In-memory storage
 urls = {}
 
-# Fake API key for authentication
 API_KEY = "mysecretapikey"
 
 def require_auth():
+    """Simple auth check with Bearer token"""
     key = request.headers.get("Authorization")
     if key != f"Bearer {API_KEY}":
         return False
     return True
 
-# Helper: generate unique shortcode
 def generate_shortcode():
     while True:
         code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
-        if code not in urls:  # uniqueness check
+        if code not in urls:
             return code
 
-# 1. Create short URL
 @app.route("/shorturls", methods=["POST"])
 def create_short_url():
     if not require_auth():
@@ -62,7 +59,6 @@ def create_short_url():
         "validityMinutes": validity
     }), 201
 
-# 2. Retrieve short URL stats
 @app.route("/shorturls/<shortcode>", methods=["GET"])
 def get_stats(shortcode):
     if not require_auth():
@@ -85,7 +81,6 @@ def get_stats(shortcode):
         "clicks": url_doc["clicks"]
     }), 200
 
-# 3. Redirection
 @app.route("/<shortcode>", methods=["GET"])
 def redirect_url(shortcode):
     url_doc = urls.get(shortcode)
