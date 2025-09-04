@@ -1,5 +1,7 @@
 import time
-from flask import request
+from flask import request, jsonify
+
+logs = []
 
 def log_request(app):
     @app.before_request
@@ -11,7 +13,17 @@ def log_request(app):
     def log_response(response):
         from flask import g
         duration = round(time.time() - g.start, 4)
-        log_line = f"{request.method} {request.path} {response.status_code} {duration}s\n"
+        log_line = {
+            "method": request.method,
+            "path": request.path,
+            "status": response.status_code,
+            "duration": f"{duration}s"
+        }
+        logs.append(log_line)
         with open("request_logs.txt", "a") as f:
-            f.write(log_line)
+            f.write(f"{log_line}\n")
         return response
+
+    @app.route("/logs", methods=["GET"])
+    def get_logs():
+        return jsonify(logs), 200
